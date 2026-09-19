@@ -6,7 +6,7 @@ A login page that checks **how** a person types their password, not only what th
 knows the correct password but types with a different rhythm, or is a script, the login is blocked.
 There is no OTP or other fallback.
 
-Team: TODO (names)
+Team: Warriors( Srinija, Rishitha, Akanksha)
 
 ## Run it
 
