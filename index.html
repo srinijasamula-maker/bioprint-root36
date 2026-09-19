@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BioPrint: a login that knows how you type</title>
+  <style>
+:root {
+  --ink: #15222e;
+  --muted: #5b6b79;
+  --paper: #edf1f4;
+  --panel: #ffffff;
+  --line: #d3dce3;
+  --accent: #1d5f7a;
+  --accent-soft: #cfe3ec;
+  --ok: #1c7a4a;
+  --bad: #b03a2e;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+}
+
+main { max-width: 32rem; margin: 0 auto; padding: 2.5rem 1.25rem 4rem; }
+
+h1 { margin: 0; font-size: 2.25rem; letter-spacing: -0.03em; }
+h2 { margin: 0 0 0.25rem; font-size: 1.35rem; }
+.lede { margin: 0.25rem 0 1.75rem; color: var(--muted); }
+
+.tabs { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
+.tab {
+  flex: 1; padding: 0.6rem; border: 1px solid var(--line); border-radius: 8px;
+  background: transparent; color: var(--muted); font: inherit; cursor: pointer;
+}
+.tab.active { background: var(--panel); color: var(--ink); border-color: var(--accent); font-weight: 600; }
+
+.card {
+  background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px; padding: 1.25rem; margin-bottom: 1rem;
+}
+
+label { display: block; margin: 0.9rem 0 0.3rem; font-size: 0.9rem; font-weight: 600; }
+input[type="text"], input[type="password"], select {
+  width: 100%; padding: 0.65rem 0.75rem; border: 1px solid var(--line);
+  border-radius: 6px; font: inherit; background: #fff; color: var(--ink);
+}
+input:read-only { background: var(--paper); color: var(--muted); }
+
+button { font: inherit; }
+button:focus-visible, input:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--accent); outline-offset: 2px;
+}
+.primary {
+  width: 100%; margin-top: 1.25rem; padding: 0.75rem; border: 0; border-radius: 8px;
+  background: var(--accent); color: #fff; font-weight: 600; cursor: pointer;
+}
+.primary:hover { background: #164c62; }
+
+.progress { display: flex; gap: 0.35rem; margin-top: 1rem; }
+.progress:empty { display: none; }
+.dot { flex: 1; height: 0.5rem; border-radius: 4px; background: var(--accent-soft); }
+.dot.filled { background: var(--accent); }
+
+#message { min-height: 1.5rem; margin: 0.75rem 0 0; font-size: 0.95rem; }
+#message.warn { color: var(--bad); }
+#instructions { margin: 0 0 0.5rem; color: var(--muted); }
+
+.result h2.ok { color: var(--ok); }
+.result h2.bad { color: var(--bad); }
+.result p { margin: 0.25rem 0; }
+.result ul { margin: 0.75rem 0 0; padding-left: 1.2rem; }
+.result li { margin-bottom: 0.3rem; }
+
+.meter { position: relative; height: 0.7rem; margin-top: 1rem; border-radius: 4px; background: var(--paper); }
+#meter-fill { height: 100%; border-radius: 4px; background: var(--ok); transition: width 0.3s; }
+#meter-fill.bad { background: var(--bad); }
+#meter-limit { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
+.caption { margin: 0.4rem 0 0; font-size: 0.85rem; color: var(--muted); }
+
+figure { margin: 1rem 0 0; }
+svg { display: block; width: 100%; height: auto; }
+svg .band { fill: var(--accent-soft); }
+svg .bar { fill: var(--ink); }
+
+.demo summary { cursor: pointer; font-weight: 600; }
+.row { display: flex; gap: 0.5rem; margin-top: 0.9rem; }
+.row button {
+  flex: 1; padding: 0.6rem; border: 1px solid var(--bad); border-radius: 8px;
+  background: transparent; color: var(--bad); cursor: pointer;
+}
+.row button:hover { background: #fbeceb; }
+
+.link { display: block; margin: 0.5rem auto 0; border: 0; background: none; color: var(--muted); text-decoration: underline; cursor: pointer; }
+
+@media (prefers-reduced-motion: reduce) { #meter-fill { transition: none; } }
+
+#live { margin-top: 0.9rem; }
+#live .meter { margin-top: 0; }
+#live-fill { height: 100%; border-radius: 4px; background: var(--ok); transition: width 0.15s; }
+#live-fill.low { background: var(--bad); }
+#live-pass { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); left: 80%; }
+label.check { display: flex; gap: 0.5rem; align-items: center; margin: 0.9rem 0 0; font-weight: 400; color: var(--muted); }
+label.check input { width: auto; margin: 0; }
+@media (prefers-reduced-motion: reduce) { #live-fill { transition: none; } }
+
+.profiles { list-style: none; margin: 0.5rem 0 0; padding: 0; }
+.profiles li { display: flex; align-items: center; gap: 0.6rem; padding: 0.4rem 0; border-top: 1px solid var(--line); }
+.profiles li:first-child { border-top: 0; }
+.profiles .caption { margin: 0; flex: 1; }
+.pick { padding: 0.35rem 0.8rem; border: 1px solid var(--accent); border-radius: 999px; background: transparent; color: var(--accent); font-weight: 600; cursor: pointer; }
+.pick:hover { background: var(--accent-soft); }
+.del { border: 0; background: none; color: var(--muted); text-decoration: underline; cursor: pointer; }
+</style>
+</head>
+<body>
+  <main>
+    <h1>BioPrint</h1>
+    <p class="lede">A login that checks how you type, not only what you type.</p>
+
+    <div class="tabs">
+      <button id="tab-enroll" class="tab active" type="button">Enroll</button>
+      <button id="tab-login" class="tab" type="button">Log in</button>
+    </div>
+
+    <section class="card">
+      <p id="instructions"></p>
+      <form id="form" autocomplete="off">
+        <label for="username">Username</label>
+        <input id="username" type="text" autocomplete="off" spellcheck="false">
+
+        <label for="password">Password</label>
+        <input id="password" type="password" autocomplete="new-password">
+
+        <div id="live" hidden>
+          <div class="meter"><div id="live-fill"></div><div id="live-pass"></div></div>
+          <p id="live-caption" class="caption"></p>
+        </div>
+
+        <label class="check"><input id="live-toggle" type="checkbox" checked> Show live rhythm match while typing (demo mode)</label>
+
+        <label for="strictness">Strictness</label>
+        <select id="strictness">
+          <option value="relaxed">Relaxed: fewer false blocks of the owner</option>
+          <option value="balanced">Balanced</option>
+          <option value="strict">Strict: blocks similar typists more often</option>
+        </select>
+
+        <button id="submit" class="primary" type="submit">Save typing sample</button>
+      </form>
+      <div id="progress" class="progress" aria-hidden="true"></div>
+      <p id="progress-label" class="caption"></p>
+      <p id="message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="result" class="card result" hidden aria-live="polite">
+      <h2 id="verdict"></h2>
+      <p id="verdict-text"></p>
+      <div id="meter-wrap" hidden>
+        <div class="meter"><div id="meter-fill"></div><div id="meter-limit"></div></div>
+        <p id="meter-caption" class="caption"></p>
+      </div>
+      <ul id="reasons"></ul>
+      <figure id="chart-wrap" hidden>
+        <div id="chart"></div>
+        <figcaption class="caption">Gaps between key presses. Dark bars are this attempt; the shaded band is the account owner's usual range.</figcaption>
+      </figure>
+    </section>
+
+    <section class="card">
+      <h2>Saved profiles</h2>
+      <ul id="profiles" class="profiles"></ul>
+      <p id="profiles-empty" class="caption">No profiles yet. Enroll one on the Enroll tab.</p>
+    </section>
+
+    <details class="card demo">
+      <summary>Attacker demo</summary>
+      <p class="caption">Simulates someone who already knows the correct password. Enter the username above, then choose an attack.</p>
+      <label for="bot-password">Password the attacker uses</label>
+      <input id="bot-password" type="text" autocomplete="off" spellcheck="false">
+      <div class="row">
+        <button id="bot-paste" type="button">Instant fill</button>
+        <button id="bot-script" type="button">Script types it evenly</button>
+      </div>
+    </details>
+
+    <button id="reset" class="link" type="button">Delete all saved profiles</button>
+  </main>
+
+  <script>
+/* ===================== engine: the scoring and bot detection ===================== */
+/* engine.js — the "brain" of BioPrint.
+   Turns key timings into a behaviour score and spots bots.
+   No HTML in this file, so it can be tested and explained on its own. */
+const ENGINE = (() => {
+  const MIN_STD_MS = 12;   // never trust a spread smaller than this (stops tiny differences giving huge scores)
+  const Z_CLAMP = 3;       // one odd keystroke can't dominate the whole score
+  const PASS_PERCENT = 80; // a match at or above this % is the same as being under the personal threshold
+
+  const mean = a => a.reduce((s, x) => s + x, 0) / a.length;
+  const std = a => {
+    const m = mean(a);
+    return Math.sqrt(a.reduce((s, x) => s + (x - m) ** 2, 0) / Math.max(a.length - 1, 1));
+  };
+  const median = a => {
+    const b = [...a].sort((x, y) => x - y);
+    const h = Math.floor(b.length / 2);
+    return b.length % 2 ? b[h] : (b[h - 1] + b[h]) / 2;
+  };
+  const meanAbsDiff = (a, b) => mean(a.map((x, i) => Math.abs(x - b[i])));
+
+  /* events = [{down, up}] in the order keys were pressed (times in ms).
+     Feature vector = [hold time of each key..., gap between each pair of key-presses...] */
+  function extractFeatures(events) {
+    const dwell = events.map(e => e.up - e.down);
+    const gaps = [];
+    for (let i = 0; i < events.length - 1; i++) gaps.push(events[i + 1].down - events[i].down);
+    return dwell.concat(gaps);
+  }
+
+  const keyCount = features => (features.length + 1) / 2;
+
+  function label(i, n) {
+    return i < n ? `Hold time of key ${i + 1}` : `Gap between key ${i - n + 1} and key ${i - n + 2}`;
+  }
+
+  /* The profile is just the average and the spread of every feature across the enrollment samples. */
+  function buildProfile(samples) {
+    const k = samples[0].length;
+    const m = [], s = [];
+    for (let j = 0; j < k; j++) {
+      const col = samples.map(v => v[j]);
+      m.push(mean(col));
+      s.push(Math.max(std(col), MIN_STD_MS));
+    }
+    return { mean: m, std: s };
+  }
+
+  /* How many "spreads" away from the user's average is each feature? (capped) */
+  function deviations(profile, x) {
+    return x.map((v, j) => Math.min(Math.abs(v - profile.mean[j]) / profile.std[j], Z_CLAMP));
+  }
+  const score = (profile, x) => mean(deviations(profile, x));
+
+  /* Turns the raw score into a friendly 0-100 "rhythm match". Score 0 = 100%, score at the threshold = PASS_PERCENT. */
+  function matchPercent(sc, threshold) {
+    return Math.floor(Math.max(0, Math.min(100, 100 - (100 - PASS_PERCENT) * sc / threshold)));
+  }
+
+  /* Live score while the user is still typing: only uses the keys and gaps typed so far.
+     events = [{down, up}] where up may still be null. Returns null until there is enough to judge. */
+  function liveScore(profile, events) {
+    const n = keyCount(profile.mean);
+    const zs = [];
+    const z = (v, j) => Math.min(Math.abs(v - profile.mean[j]) / profile.std[j], Z_CLAMP);
+    const len = Math.min(events.length, n);
+    for (let i = 0; i < len; i++) {
+      if (events[i].up !== null) zs.push(z(events[i].up - events[i].down, i));
+      if (i < len - 1) zs.push(z(events[i + 1].down - events[i].down, n + i));
+    }
+    return zs.length >= 3 ? mean(zs) : null;
+  }
+
+  /* Personal threshold: score each enrollment sample against a profile built from the OTHER samples
+     ("leave one out"). This tells us how much the owner's own attempts normally vary.
+     The limit = average + sigmas * spread of those scores. Fewer sigmas = stricter.
+     A steady typist gets a strict limit, an erratic one a looser limit. */
+  function calibrate(samples) {
+    const loo = samples.map((x, i) => score(buildProfile(samples.filter((_, j) => j !== i)), x));
+    return { mean: mean(loo), std: std(loo) };
+  }
+  const thresholdFor = (stats, sigmas) => stats.mean + sigmas * stats.std;
+
+  /* Bot signals are separate from the behaviour score, so a bot is reported as a bot. */
+  function detectBot(attempt, features, known) {
+    const signals = [];
+    if (attempt.untrusted) signals.push('Keystrokes were generated by a script, not a physical keyboard.');
+    if (!attempt.typedByKeys) {
+      signals.push('Password was pasted or auto-filled instead of typed.');
+      return signals;
+    }
+    const n = keyCount(features);
+    const dwell = features.slice(0, n), gaps = features.slice(n);
+    if (median(dwell) < 15) signals.push('Keys were released faster than a human finger can manage.');
+    if (gaps.length && median(gaps) < 30) signals.push('Typing speed is beyond human range.');
+    if (gaps.length >= 5 && std(gaps) / mean(gaps) < 0.08) signals.push('Rhythm is unnaturally even. Humans never type this steadily.');
+    if (known.some(v => v.length === features.length && meanAbsDiff(v, features) < 2.5))
+      signals.push('Timing is a near-exact copy of an earlier attempt (replayed input).');
+    return signals;
+  }
+
+  /* Final decision. Returns { verdict, kind, score, threshold, reasons, devs } */
+  function decide({ attempt, features, profile, threshold, known }) {
+    const bot = detectBot(attempt, features || [], known);
+    if (bot.length) return { verdict: 'block', kind: 'bot', reasons: bot };
+
+    const devs = deviations(profile, features);
+    const sc = mean(devs);
+    if (sc > threshold) {
+      const n = keyCount(features);
+      const reasons = devs
+        .map((d, i) => ({ d, i }))
+        .sort((a, b) => b.d - a.d)
+        .slice(0, 3)
+        .map(({ i }) => `${label(i, n)}: ${Math.round(features[i])} ms (your usual is about ${Math.round(profile.mean[i])} ms)`);
+      return { verdict: 'block', kind: 'behavior', score: sc, threshold, reasons, devs };
+    }
+    return { verdict: 'allow', kind: 'ok', score: sc, threshold, reasons: [], devs };
+  }
+
+  return { extractFeatures, buildProfile, calibrate, thresholdFor, decide, score, keyCount, matchPercent, liveScore, PASS_PERCENT };
+})();
+
+
+/* ===================== page: keystroke capture, enrollment, login ===================== */
+/* script.js — the page. Captures keystrokes, runs enrollment and login, shows the result.
+   The scoring itself lives in engine.js. */
+
+const ENROLL_SAMPLES = 15;      // how many times the user types their password to enroll
+const MIN_PASSWORD_LENGTH = 8;  // longer password = more timing features = better accuracy
+const MAX_SAMPLES = 40;         // profile keeps only the newest samples (this is the "adaptive" part)
+const STORE_KEY = 'bioprint_users_v1';
+const STRICT_KEY = 'bioprint_strictness';
+const SIGMAS = { relaxed: 2.5, balanced: 2.0, strict: 1.5 };   // fewer sigmas = stricter limit
+
+const $ = id => document.getElementById(id);
+const els = {
+  tabEnroll: $('tab-enroll'), tabLogin: $('tab-login'), instructions: $('instructions'),
+  form: $('form'), username: $('username'), password: $('password'), submit: $('submit'),
+  progress: $('progress'), message: $('message'), result: $('result'),
+  verdict: $('verdict'), verdictText: $('verdict-text'), reasons: $('reasons'),
+  meterWrap: $('meter-wrap'), meterFill: $('meter-fill'), meterLimit: $('meter-limit'),
+  meterCaption: $('meter-caption'), chartWrap: $('chart-wrap'), chart: $('chart'),
+  botPassword: $('bot-password'), botPaste: $('bot-paste'), botScript: $('bot-script'),
+  reset: $('reset'), progressLabel: $('progress-label'),
+  profiles: $('profiles'), profilesEmpty: $('profiles-empty'),
+  strictness: $('strictness'), live: $('live'), liveFill: $('live-fill'), liveCaption: $('live-caption'), liveToggle: $('live-toggle'),
+};
+
+let mode = 'enroll';
+let enrollment = null;          // { username, pwHash, samples: [] } while enrolling
+let capture = newCapture();
+
+/* ---------- storage (localStorage is fine for a demo; a real system would use a server) ---------- */
+function loadUsers() {
+  try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; }
+}
+function saveUsers(users) { localStorage.setItem(STORE_KEY, JSON.stringify(users)); }
+
+/* The limit is worked out from the owner's samples every time, so changing Strictness
+   takes effect immediately and adaptive updates are always included. */
+function thresholdFor(user) {
+  const level = els.strictness.value in SIGMAS ? els.strictness.value : 'strict';
+  return ENGINE.thresholdFor(ENGINE.calibrate(user.samples), SIGMAS[level]);
+}
+
+async function hashPassword(pw) {
+  if (window.crypto && crypto.subtle) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(pw));
+    return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+  return 'plain:' + pw; // demo-only fallback when the browser blocks crypto.subtle
+}
+
+/* ---------- keystroke capture ---------- */
+function newCapture() {
+  return { events: [], open: {}, untrusted: false, corrected: false, pasted: false };
+}
+
+els.password.addEventListener('keydown', e => {
+  if (!e.isTrusted) capture.untrusted = true;               // event made by a script
+  if (e.key === 'Backspace' || e.key === 'Delete') capture.corrected = true;
+  if (e.key.length !== 1 || e.repeat) return;                // only printable keys count
+  const ev = { down: e.timeStamp, up: null };
+  capture.events.push(ev);
+  capture.open[e.code] = ev;
+  updateLive();
+});
+
+els.password.addEventListener('keyup', e => {
+  if (!e.isTrusted) capture.untrusted = true;
+  const ev = capture.open[e.code];
+  if (ev) { ev.up = e.timeStamp; delete capture.open[e.code]; }
+  updateLive();
+});
+
+els.password.addEventListener('paste', () => { capture.pasted = true; });
+els.password.addEventListener('input', e => {
+  if (e.inputType && e.inputType.startsWith('insertFromPaste')) capture.pasted = true;
+});
+
+function readAttempt() {
+  const value = els.password.value;
+  const ev = capture.events;
+  const allReleased = ev.every(e => e.up !== null);
+  const attempt = {
+    untrusted: capture.untrusted,
+    typedByKeys: !capture.pasted && value.length > 0 && ev.length === value.length,
+  };
+  let problem = null;
+  if (capture.corrected) problem = 'Please retype without Backspace or Delete, because corrections distort your rhythm.';
+  else if (!allReleased) problem = 'Release every key before pressing Enter.';
+  const features = attempt.typedByKeys && allReleased ? ENGINE.extractFeatures(ev) : null;
+  return { value, attempt, features, problem };
+}
+
+/* ---------- small UI helpers ---------- */
+function say(text, tone) {
+  els.message.textContent = text;
+  els.message.className = tone || '';
+}
+
+function renderProgress() {
+  els.progress.replaceChildren();
+  els.progressLabel.textContent = '';
+  if (mode !== 'enroll' || !enrollment) return;
+  els.progressLabel.textContent = `Profile learned: ${Math.round(enrollment.samples.length / ENROLL_SAMPLES * 100)}%`;
+  for (let i = 0; i < ENROLL_SAMPLES; i++) {
+    const dot = document.createElement('span');
+    dot.className = 'dot' + (i < enrollment.samples.length ? ' filled' : '');
+    els.progress.appendChild(dot);
+  }
+}
+
+function setMode(next) {
+  mode = next;
+  enrollment = null;
+  els.username.readOnly = false;
+  els.tabEnroll.classList.toggle('active', next === 'enroll');
+  els.tabLogin.classList.toggle('active', next === 'login');
+  els.result.hidden = true;
+  say('');
+  if (next === 'enroll') {
+    els.instructions.textContent = `Choose a username and a password of at least ${MIN_PASSWORD_LENGTH} characters, then type that same password ${ENROLL_SAMPLES} times at your natural speed. Press Enter after each one.`;
+    els.submit.textContent = `Save typing sample 1 of ${ENROLL_SAMPLES}`;
+  } else {
+    els.instructions.textContent = 'Type your username and password the way you normally do.';
+    els.submit.textContent = 'Log in';
+  }
+  renderProgress();
+  els.password.value = '';
+  capture = newCapture();
+  updateLive();
+}
+
+/* ---------- saved profiles list ---------- */
+function renderProfiles() {
+  const users = loadUsers();
+  const names = Object.keys(users);
+  els.profiles.replaceChildren();
+  els.profilesEmpty.hidden = names.length > 0;
+  names.forEach(name => {
+    const li = document.createElement('li');
+    const pick = document.createElement('button');
+    pick.type = 'button'; pick.className = 'pick'; pick.textContent = name;
+    pick.addEventListener('click', () => {           // choose this profile and go to the login tab
+      setMode('login');
+      els.username.value = name;
+      updateLive();
+      els.password.focus();
+    });
+    const meta = document.createElement('span');
+    meta.className = 'caption'; meta.textContent = `${users[name].samples.length} typing samples`;
+    const del = document.createElement('button');
+    del.type = 'button'; del.className = 'del'; del.textContent = 'Delete';
+    del.addEventListener('click', () => {
+      if (!confirm(`Delete the profile "${name}"?`)) return;
+      const all = loadUsers();
+      delete all[name];
+      saveUsers(all);
+      renderProfiles();
+      updateLive();
+    });
+    li.append(pick, meta, del);
+    els.profiles.appendChild(li);
+  });
+}
+
+/* ---------- live rhythm match (login tab) ---------- */
+function updateLive() {
+  const user = mode === 'login' && els.liveToggle.checked ? loadUsers()[els.username.value.trim().toLowerCase()] : null;
+  els.live.hidden = !user;
+  if (!user) return;
+  const sc = ENGINE.liveScore(ENGINE.buildProfile(user.samples), capture.events);
+  if (sc === null) {
+    els.liveFill.style.width = '0%';
+    els.liveCaption.textContent = 'Start typing your password to see your rhythm match.';
+    return;
+  }
+  const pct = ENGINE.matchPercent(sc, thresholdFor(user));
+  els.liveFill.style.width = pct + '%';
+  els.liveFill.className = pct >= ENGINE.PASS_PERCENT ? '' : 'low';
+  els.liveCaption.textContent = `Rhythm match so far: ${pct}%. You need ${ENGINE.PASS_PERCENT}% or more (the line).`;
+}
+els.liveToggle.addEventListener('change', updateLive);
+els.username.addEventListener('input', updateLive);
+
+/* ---------- enrollment ---------- */
+async function handleEnroll(r) {
+  const username = els.username.value.trim().toLowerCase();
+  if (!username) return say('Enter a username first.', 'warn');
+  if (r.problem) return say(r.problem, 'warn');
+  if (r.attempt.untrusted || !r.attempt.typedByKeys)
+    return say('Type the password on your keyboard. Pasted or auto-filled text has no rhythm to learn.', 'warn');
+  if (r.value.length < MIN_PASSWORD_LENGTH)
+    return say(`Use at least ${MIN_PASSWORD_LENGTH} characters.`, 'warn');
+
+  const pwHash = await hashPassword(r.value);
+
+  if (!enrollment) {
+    if (loadUsers()[username]) return say('That username is already enrolled. Pick another, or delete saved profiles below.', 'warn');
+    enrollment = { username, pwHash, samples: [] };
+    els.username.readOnly = true;
+  } else if (pwHash !== enrollment.pwHash) {
+    return say('That is not the same as your first password. Type the same one again.', 'warn');
+  }
+
+  enrollment.samples.push(r.features);
+  renderProgress();
+
+  if (enrollment.samples.length < ENROLL_SAMPLES) {
+    const n = enrollment.samples.length;
+    els.submit.textContent = `Save typing sample ${n + 1} of ${ENROLL_SAMPLES}`;
+    return say(`Sample ${n} saved. Type the same password again.`);
+  }
+
+  const users = loadUsers();
+  users[enrollment.username] = {
+    pwHash: enrollment.pwHash,
+    samples: enrollment.samples,
+  };
+  saveUsers(users);
+  const name = enrollment.username;
+  setMode('login');
+  els.username.value = name;
+  renderProfiles();
+  say('Enrollment complete. Now try logging in.');
+}
+
+/* ---------- login ---------- */
+async function handleLogin(r) {
+  const username = els.username.value.trim().toLowerCase();
+  if (!username) return say('Enter your username.', 'warn');
+  if (r.problem) return say(r.problem, 'warn');
+
+  const user = loadUsers()[username];
+  const passwordOk = user && (await hashPassword(r.value)) === user.pwHash;
+  if (!passwordOk) {
+    return showResult({ verdict: 'block', kind: 'credentials', reasons: [] });
+  }
+
+  const profile = ENGINE.buildProfile(user.samples);
+  const result = ENGINE.decide({
+    attempt: r.attempt, features: r.features, profile,
+    threshold: thresholdFor(user), known: user.samples,
+  });
+
+  if (result.verdict === 'allow') {
+    // adaptive profile: accepted logins become new samples, so the profile follows gentle drift
+    user.samples.push(r.features);
+    if (user.samples.length > MAX_SAMPLES) user.samples.shift();
+    const users = loadUsers();
+    users[username] = user;
+    saveUsers(users);
+    renderProfiles();
+  }
+  showResult(result, r.features, profile);
+}
+
+const HEADLINES = {
+  ok: ['Access granted', 'Your typing rhythm matches your profile.'],
+  behavior: ['Access blocked', 'The password is correct, but the typing rhythm does not match the account owner.'],
+  bot: ['Access blocked', 'Automated input detected. This looks like a script, not a person.'],
+  credentials: ['Access blocked', 'Incorrect username or password.'],
+};
+
+function showResult(res, features, profile) {
+  const [title, text] = HEADLINES[res.kind];
+  els.result.hidden = false;
+  els.verdict.textContent = title;
+  els.verdict.className = res.verdict === 'allow' ? 'ok' : 'bad';
+  els.verdictText.textContent = text;
+
+  els.reasons.replaceChildren();
+  res.reasons.forEach(t => {
+    const li = document.createElement('li');
+    li.textContent = t;
+    els.reasons.appendChild(li);
+  });
+
+  const hasScore = typeof res.score === 'number';
+  els.meterWrap.hidden = !hasScore;
+  if (hasScore) {
+    const pct = ENGINE.matchPercent(res.score, res.threshold);
+    els.meterFill.style.width = pct + '%';
+    els.meterFill.className = res.verdict === 'allow' ? '' : 'bad';
+    els.meterLimit.style.left = ENGINE.PASS_PERCENT + '%';
+    els.meterCaption.textContent = `Rhythm match: ${pct}%. You need ${ENGINE.PASS_PERCENT}% or more to log in (the line).`;
+  }
+
+  const canChart = features && profile && res.kind !== 'credentials';
+  els.chartWrap.hidden = !canChart;
+  if (canChart) els.chart.innerHTML = drawChart(features, profile);
+  say('');
+}
+
+/* bars = this attempt's gaps between key presses, shaded band = the owner's usual range */
+function drawChart(features, profile) {
+  const n = ENGINE.keyCount(features);
+  const gaps = features.slice(n), means = profile.mean.slice(n), sds = profile.std.slice(n);
+  const W = 320, H = 110, pad = 6, bw = (W - pad * 2) / gaps.length;
+  const top = Math.max(...gaps, ...means.map((m, i) => m + sds[i])) * 1.05;
+  const y = v => H - (v / top) * (H - 8);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gaps between key presses compared with the usual range">`;
+  gaps.forEach((g, i) => {
+    const x = pad + i * bw;
+    const hi = y(means[i] + sds[i]), lo = y(Math.max(means[i] - sds[i], 0));
+    svg += `<rect class="band" x="${x + 2}" y="${hi}" width="${bw - 4}" height="${lo - hi}"/>`;
+    svg += `<rect class="bar" x="${x + bw * 0.3}" y="${y(g)}" width="${bw * 0.4}" height="${H - y(g)}"/>`;
+  });
+  return svg + '</svg>';
+}
+
+/* ---------- wiring ---------- */
+els.form.addEventListener('submit', async e => {
+  e.preventDefault();
+  const r = readAttempt();          // read first...
+  capture = newCapture();           // ...then clear, so the next attempt starts fresh
+  els.password.value = '';
+  updateLive();
+  if (mode === 'enroll') await handleEnroll(r); else await handleLogin(r);
+});
+
+els.tabEnroll.addEventListener('click', () => {
+  // starting a new enrollment: clear the name if it already belongs to a saved profile
+  if (loadUsers()[els.username.value.trim().toLowerCase()]) els.username.value = '';
+  setMode('enroll');
+});
+els.tabLogin.addEventListener('click', () => setMode('login'));
+
+els.reset.addEventListener('click', () => {
+  if (!confirm('Delete every saved profile?')) return;
+  localStorage.removeItem(STORE_KEY);
+  setMode('enroll');
+  renderProfiles();
+  say('All profiles deleted.');
+});
+
+/* ---------- attacker demo: pretends to be a bot that knows the password ---------- */
+els.botPaste.addEventListener('click', () => {
+  setMode('login');
+  els.password.value = els.botPassword.value;   // no key events at all, like auto-fill
+  els.form.requestSubmit();
+});
+
+els.botScript.addEventListener('click', () => {
+  setMode('login');
+  const pw = els.botPassword.value;
+  let i = 0;
+  const step = () => {
+    if (i >= pw.length) return els.form.requestSubmit();
+    const key = pw[i++], code = 'Key' + i;
+    els.password.dispatchEvent(new KeyboardEvent('keydown', { key, code }));   // isTrusted = false
+    els.password.value += key;
+    setTimeout(() => {
+      els.password.dispatchEvent(new KeyboardEvent('keyup', { key, code }));
+      setTimeout(step, 50);                                                    // perfectly even rhythm
+    }, 100);
+  };
+  step();
+});
+
+els.strictness.value = localStorage.getItem(STRICT_KEY) in SIGMAS ? localStorage.getItem(STRICT_KEY) : 'strict';
+els.strictness.addEventListener('change', () => {
+  localStorage.setItem(STRICT_KEY, els.strictness.value);
+  updateLive();
+});
+$('live-pass').style.left = ENGINE.PASS_PERCENT + '%';
+
+setMode('enroll');
+renderProfiles();
+</script>
+</body>
+</html>
