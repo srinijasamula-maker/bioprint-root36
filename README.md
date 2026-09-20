@@ -47,7 +47,7 @@ consecutive key presses.
 
 **Accuracy**
 - **Similar typists can get through.** In our testing, a friend with a similar typing speed and rhythm was sometimes accepted. Behavioral matching cannot reliably separate two people who genuinely type alike.
-- **Strictness is a trade-off.** A stricter setting blocks look-alike typists more often, but it also blocks the real owner more often. We chose **[Strict / Balanced / Relaxed]** after testing.
+- **Strictness is a trade-off.** A stricter setting blocks look-alike typists more often, but it also blocks the real owner more often. We chose **Balanced** after testing.
 - **Our test results:** **[e.g. "Owner: 5 attempts, 4 accepted. Friend with the correct password: 5 attempts, 2 accepted."]** These come from a small number of people, so they are not a proper statistical evaluation.
 - **Typing changes.** Tiredness, stress, a different keyboard, a laptop versus a desktop, or an injured hand can change someone's rhythm and cause the genuine user to be blocked.
 - **Needs enough data.** The system needs a password of at least 8 characters and 15 enrollment samples, typed at a natural pace. A rushed or careless enrollment gives a weak profile.
@@ -80,4 +80,4 @@ We used **Claude (by Anthropic)** as our only AI tool during this hackathon.
 - Tested the system with real typing: enrolled a profile and tried logins by the genuine user and by a friend who typed the correct password
 - Found that a friend with a similar typing speed was accepted, and asked for a stricter check. This led to the Strictness setting, the 80% pass mark, and 15 enrollment samples
 - 
-We read through the code and can explain how it works. Every part of the project was created during the event window, and the commit history shows our work over time.
+We read through the code and made few edits in the way we wanted to. Every part of the project was created during the event window, and the commit history shows our work over time.
