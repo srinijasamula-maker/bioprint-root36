@@ -355,7 +355,7 @@ function saveUsers(users) { localStorage.setItem(STORE_KEY, JSON.stringify(users
 /* The limit is worked out from the owner's samples every time, so changing Strictness
    takes effect immediately and adaptive updates are always included. */
 function thresholdFor(user) {
-  const level = els.strictness.value in SIGMAS ? els.strictness.value : 'strict';
+  const level = els.strictness.value in SIGMAS ? els.strictness.value : 'balanced';
   return ENGINE.thresholdFor(ENGINE.calibrate(user.samples), SIGMAS[level]);
 }
 
@@ -675,7 +675,7 @@ els.botScript.addEventListener('click', () => {
   step();
 });
 
-els.strictness.value = localStorage.getItem(STRICT_KEY) in SIGMAS ? localStorage.getItem(STRICT_KEY) : 'strict';
+els.strictness.value = localStorage.getItem(STRICT_KEY) in SIGMAS ? localStorage.getItem(STRICT_KEY) : 'balanced';
 els.strictness.addEventListener('change', () => {
   localStorage.setItem(STRICT_KEY, els.strictness.value);
   updateLive();
