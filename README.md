@@ -48,7 +48,7 @@ consecutive key presses.
 **Accuracy**
 - **Similar typists can get through.** In our testing, a friend with a similar typing speed and rhythm was sometimes accepted. Behavioral matching cannot reliably separate two people who genuinely type alike.
 - **Strictness is a trade-off.** A stricter setting blocks look-alike typists more often, but it also blocks the real owner more often. We chose **[Strict / Balanced / Relaxed]** after testing.
-- **Our test results:** **[e.g. "Owner: 10 attempts, 9 accepted. Friend with the correct password: 10 attempts, 3 accepted."]** These come from a small number of people, so they are not a proper statistical evaluation.
+- **Our test results:** **[e.g. "Owner: 5 attempts, 4 accepted. Friend with the correct password: 5 attempts, 2 accepted."]** These come from a small number of people, so they are not a proper statistical evaluation.
 - **Typing changes.** Tiredness, stress, a different keyboard, a laptop versus a desktop, or an injured hand can change someone's rhythm and cause the genuine user to be blocked.
 - **Needs enough data.** The system needs a password of at least 8 characters and 15 enrollment samples, typed at a natural pace. A rushed or careless enrollment gives a weak profile.
 
