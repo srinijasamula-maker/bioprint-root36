@@ -45,12 +45,39 @@ consecutive key presses.
 
 ## Limitations
 
-- TODO: write these from your own testing (for example: accuracy on a different keyboard, when tired, or when the user is nervous).
-- Strictness is a trade-off. In our tests, a stricter setting blocks a friend with a similar typing style more often, but also blocks the real owner more often. TODO: add your own test results here.
-- The live match bar is a demo feature. In a real system it would be hidden, because it would let an attacker tune their typing.
-- Profiles live in the browser for the demo. A real system would store them on a server, with the password properly hashed and salted.
+**Accuracy**
+- **Similar typists can get through.** In our testing, a friend with a similar typing speed and rhythm was sometimes accepted. Behavioral matching cannot reliably separate two people who genuinely type alike.
+- **Strictness is a trade-off.** A stricter setting blocks look-alike typists more often, but it also blocks the real owner more often. We chose **[Strict / Balanced / Relaxed]** after testing.
+- **Our test results:** **[e.g. "Owner: 10 attempts, 9 accepted. Friend with the correct password: 10 attempts, 3 accepted."]** These come from a small number of people, so they are not a proper statistical evaluation.
+- **Typing changes.** Tiredness, stress, a different keyboard, a laptop versus a desktop, or an injured hand can change someone's rhythm and cause the genuine user to be blocked.
+- **Needs enough data.** The system needs a password of at least 8 characters and 15 enrollment samples, typed at a natural pace. A rushed or careless enrollment gives a weak profile.
+
+**Usability**
+- **No corrections.** Backspace and Delete are not allowed during an attempt, because they would distort the timing. The user has to retype from scratch.
+- **Pasting and auto-fill are treated as bots.** A genuine user who uses a password manager or pastes their password would be blocked.
+- **Keyboard only.** We only capture keyboard timing. Touchscreens and other input methods are not supported, and a profile enrolled on one keyboard may not match another.
+
+**Bot detection**
+- **Simple rules only.** We detect script-generated events, pasting, superhuman speed, unnaturally even timing, and replayed timings. A more advanced bot that adds random human-like variation could pass these checks, although it would still need to match the owner's specific rhythm.
+
+**Security and design (this is a demo prototype)**
+- **All checks run in the browser.** Profiles are stored in the browser's localStorage, and the decision is made by JavaScript on the page. Anyone with access to the browser could read or edit them. A real system would store profiles and make decisions on a server.
+- **Basic password handling.** The password is stored only as a plain hash for the demo. A real system would use a salted, slow hash on a server.
+- **No lockout or rate limiting.** There is nothing stopping repeated login attempts.
+- **The live match bar helps attackers.** It is shown as a demo feature and can be switched off. In a real system it would be hidden, since an attacker could use it to practice until they pass.
+- **Accessibility.** People with motor differences may type less consistently, so this method may not be fair to everyone.
 
 ## AI tools used
 
-TODO: fill this in honestly. For example: which AI assistant you used, which parts it helped write, and what
-your team changed, tested or tuned yourselves.
+We used **Claude (by Anthropic)** as our only AI tool during this hackathon.
+
+**What Claude helped with:**
+- Writing the code for the login page, including the keystroke timing capture, the enrollment flow, the scoring and bot-detection logic, and the page design
+- Explaining how behavioral biometrics and keystroke dynamics work
+- Guiding us through Git, GitHub and setting up the repository
+
+**What our team did ourselves:**
+- Tested the system with real typing: enrolled a profile and tried logins by the genuine user and by a friend who typed the correct password
+- Found that a friend with a similar typing speed was accepted, and asked for a stricter check. This led to the Strictness setting, the 80% pass mark, and 15 enrollment samples
+- 
+We read through the code and can explain how it works. Every part of the project was created during the event window, and the commit history shows our work over time.
