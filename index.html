@@ -317,7 +317,7 @@ const ENGINE = (() => {
 })();
 
 
-/* ===================== page: keystroke capture, enrollment, login ===================== */
+/* ==================== page: keystroke capture, enrollment, login ==================== */
 /* script.js — the page. Captures keystrokes, runs enrollment and login, shows the result.
    The scoring itself lives in engine.js. */
 
@@ -367,7 +367,7 @@ async function hashPassword(pw) {
   return 'plain:' + pw; // demo-only fallback when the browser blocks crypto.subtle
 }
 
-/* ---------- keystroke capture ---------- */
+/* --------- keystroke capture --------- */
 function newCapture() {
   return { events: [], open: {}, untrusted: false, corrected: false, pasted: false };
 }
@@ -528,7 +528,7 @@ async function handleEnroll(r) {
     els.submit.textContent = `Save typing sample ${n + 1} of ${ENROLL_SAMPLES}`;
     return say(`Sample ${n} saved. Type the same password again.`);
   }
-
+  
   const users = loadUsers();
   users[enrollment.username] = {
     pwHash: enrollment.pwHash,
